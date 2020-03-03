@@ -351,6 +351,13 @@ def calculateEventsArrayWithBroadcast(agg: ContigEventAggregate, upd: mutable.Ha
       contigMaxReadLen(contig) = seqLen
   }
 
+  @inline
+  private def updateMaxCigarInContig(cigarLen:Int, contig: String, contigMaxReadLen: mutable.HashMap[String, Int]): Unit = {
+    if (cigarLen > contigMaxReadLen(contig))
+      contigMaxReadLen(contig) = cigarLen
+  }
+
+
   /**
     * updates events array for contig and updates contig's max read length
     *
@@ -364,24 +371,30 @@ def calculateEventsArrayWithBroadcast(agg: ContigEventAggregate, upd: mutable.Ha
     val partitionStart = eventAggregate.startPosition
     var position = read.getStart
     val cigarIterator = read.getCigar.iterator()
+    var cigarLen = 0
 
     while (cigarIterator.hasNext) {
       val cigarElement = cigarIterator.next()
-      val cigarOpLength = cigarElement.getLength
-      val cigarOp = cigarElement.getOperator
+      val cigarOperatorLen = cigarElement.getLength
+      val cigarOperator = cigarElement.getOperator
+
+      if (cigarOperator == CigarOperator.M || cigarOperator == CigarOperator.X || cigarOperator == CigarOperator.EQ || cigarOperator == CigarOperator.N || cigarOperator == CigarOperator.D)
+        cigarLen += cigarOperatorLen
 
       // update events array according to read alignment blocks start/end
-      if (cigarOp == CigarOperator.M || cigarOp == CigarOperator.X || cigarOp == CigarOperator.EQ) {
+      if (cigarOperator == CigarOperator.M || cigarOperator == CigarOperator.X || cigarOperator == CigarOperator.EQ) {
         updateContigEventsArray(position, partitionStart, contig, eventAggregate, delta = 1)
-        position += cigarOpLength
+        position += cigarOperatorLen
         updateContigEventsArray(position, partitionStart, contig, eventAggregate, delta = -1)
       }
-      else if (cigarOp == CigarOperator.N || cigarOp == CigarOperator.D)
-        position += cigarOpLength
+      else if (cigarOperator == CigarOperator.N || cigarOperator == CigarOperator.D)
+        position += cigarOperatorLen
     }
 
     // seq len is not equal to cigar len (typically longer, because of clips, but the value is ready to use, doesn't nedd to be computed)
-    updateMaxReadLenInContig(read, contig, contigMaxReadLen)
+//    updateMaxReadLenInContig(read, contig, contigMaxReadLen)
+    updateMaxCigarInContig(cigarLen, contig, contigMaxReadLen)
+
   }
 
   /**
