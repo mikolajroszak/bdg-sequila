@@ -162,7 +162,7 @@ object PileupMethods {
 
 
 
-  private def updateMinMaxByOverlap(range: ContigRange, minmax: mutable.HashMap[String, (Int, Int)]) = {
+  @inline private def updateMinMaxByOverlap(range: ContigRange, minmax: mutable.HashMap[String, (Int, Int)]) = {
     if (range.minPos < minmax(range.contig)._1)
       minmax(range.contig) = (range.minPos, minmax(range.contig)._2)
     if (range.maxPos > minmax(range.contig)._2)
@@ -190,7 +190,7 @@ object PileupMethods {
     }
   }
 
-  private def updateShrinksByOverlap(o: TailEdge, range: ContigRange, shrinkMap: mutable.HashMap[(String, Int), Int]) = {
+  @inline private def updateShrinksByOverlap(o: TailEdge, range: ContigRange, shrinkMap: mutable.HashMap[(String, Int), Int]) = {
     shrinkMap.get((o.contig, o.minPos)) match {
       case Some(s) => shrinkMap.update((o.contig, o.minPos), math.min(s, range.minPos - o.minPos + 1))
       case _ => shrinkMap += (o.contig, o.minPos) -> (range.minPos - o.minPos + 1)
@@ -198,7 +198,7 @@ object PileupMethods {
   }
 
 
-  private def calculateOverlapLength(o: TailEdge, range: ContigRange, it: Int, ranges: ArrayBuffer[ContigRange]) = {
+  @inline private def calculateOverlapLength(o: TailEdge, range: ContigRange, it: Int, ranges: ArrayBuffer[ContigRange]) = {
     val length = if ((o.startPoint + o.events.length) > range.maxPos && ((ranges.length - 1 == it) || ranges(it + 1).contig != range.contig)) {
       o.startPoint + o.events.length - range.minPos + 1
     }
@@ -213,12 +213,12 @@ object PileupMethods {
 
   }
 
-  private def precedingCumulativeSum(range:ContigRange, tails: ArrayBuffer[TailEdge]): Short = tails
+  @inline private def precedingCumulativeSum(range:ContigRange, tails: ArrayBuffer[TailEdge]): Short = tails
     .filter(t => t.contig == range.contig && t.minPos < range.minPos)
     .map(_.cumSum)
     .sum
 
-  private def findOverlappingTailsForRange(range: ContigRange, tails: ArrayBuffer[TailEdge]) = {
+  @inline private def findOverlappingTailsForRange(range: ContigRange, tails: ArrayBuffer[TailEdge]) = {
     tails
       .filter(t => (t.contig == range.contig && t.startPoint + t.events.length > range.minPos) && t.minPos < range.minPos)
       .sortBy(r => (r.contig, r.minPos))
@@ -286,8 +286,8 @@ def calculateEventsArrayWithBroadcast(agg: ContigEventAggregate, upd: mutable.Ha
             eventsArrMutable =  agg.events ++ Array.fill[Short](overlapArray.length -  agg.events.length)(0) // extend array
 
           var i = 0
-          logger.debug(s"$agg.contig, min=${agg.startPosition} max=${agg.maxPosition} updating: ${eventsArrMutable
-            .take(10).mkString(",")} with ${overlapArray.take(10).mkString(",")} and $covSum ")
+          //logger.debug(s"$agg.contig, min=${agg.startPosition} max=${agg.maxPosition} updating: ${eventsArrMutable
+           // .take(10).mkString(",")} with ${overlapArray.take(10).mkString(",")} and $covSum ")
           eventsArrMutable(i) = (eventsArrMutable(i) + covSum).toShort // add cumSum to zeroth element
 
           while (i < overlapArray.length) {
@@ -301,8 +301,7 @@ def calculateEventsArrayWithBroadcast(agg: ContigEventAggregate, upd: mutable.Ha
                 throw e
             }
           }
-          logger.debug(
-            s"$agg.contig, min=${agg.startPosition} max=${agg.maxPosition} Updated array ${eventsArrMutable.take(10).mkString(",")}")
+          //logger.debug(s"$agg.contig, min=${agg.startPosition} max=${agg.maxPosition} Updated array ${eventsArrMutable.take(10).mkString(",")}")
           eventsArrMutable
         case None =>
           eventsArrMutable(0) = (eventsArrMutable(0) + covSum).toShort
