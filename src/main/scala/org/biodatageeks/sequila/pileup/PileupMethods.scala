@@ -76,7 +76,7 @@ object PileupMethods {
     val accumulator = new PileupAccumulator(new PileupUpdate(new ArrayBuffer[TailEdge](), new ArrayBuffer[ContigRange]()))
     spark.sparkContext.register(accumulator, name="PileupAcc")
 
-    events.persist(StorageLevel.MEMORY_AND_DISK) foreach {
+    events foreach {
       agg => {
         val contig = agg.contig
         val minPos = agg.startPosition
