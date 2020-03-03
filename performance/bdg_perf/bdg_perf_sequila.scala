@@ -36,7 +36,7 @@ OPTIONS(path '${CRAM_DIR}')""")
 //targets
 val  bedPath="/data/granges/tgp_exome_hg18.bed"
 ss.sql(s"""
-             |CREATE TABLE IF NOT EXISTS targets(contigName String,start Integer,end Integer)
+             |CREATE TABLE IF NOT EXISTS targets(${Columns.CONTIG} String,${Columns.START} Integer,${Columns.END} Integer)
              |USING csv
              |OPTIONS (path "${bedPath}", delimiter "\t")""".stripMargin)
 
@@ -44,7 +44,7 @@ ss.sqlContext.setConf("spark.biodatageeks.bam.predicatePushdown","true")
 
 val queries = Array(
   BDGQuery("bdg_seq_count_NA12878",s"SELECT COUNT(*) FROM ${bamTable} WHERE ${Columns.SAMPLE}='NA12878'"),
-  BDGQuery("bdg_seq_filter_NA12878",s"SELECT COUNT(*) FROM ${bamTable} WHERE ${Columns.SAMPLE}='NA12878' and ${Columns.CONTIG}='chr8' AND ${Columns.START}>100000 AND ${Columns.END}<110000"),
+  BDGQuery("bdg_seq_filter_NA12878",s"SELECT COUNT(*) FROM ${bamTable} WHERE ${Columns.SAMPLE}='NA12878' and ${Columns.CONTIG}='8' AND ${Columns.START}>100000 AND ${Columns.END}<110000"),
   BDGQuery("bdg_cov_count_NA12878_BAM",s"SELECT COUNT(*) FROM bdg_coverage ('${bamTable}','NA12878', 'blocks')"),
   BDGQuery("bdg_cov_count_NA12878_CRAM",s"SELECT COUNT(*) FROM bdg_coverage ('${cramTable}','NA12878', 'blocks')"),
   BDGQuery("bdg_seq_int_join_NA12878",
