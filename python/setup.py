@@ -6,7 +6,7 @@ setup(
     packages=['sequila'],
     install_requires=[
         'typeguard==2.5.0',
-        'pyspark==2.4.3',
+        'pyspark==3.2.2',
         'findspark'
     ],
     author='biodatageeks.org',
