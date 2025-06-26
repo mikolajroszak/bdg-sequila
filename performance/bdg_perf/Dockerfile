@@ -1,4 +1,4 @@
-FROM nginx:1.21.6
+FROM nginx:1.29.0
 
 EXPOSE 80
 
